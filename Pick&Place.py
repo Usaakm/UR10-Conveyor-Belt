@@ -44,23 +44,6 @@ import urx
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # # Create a robot object
 # robot = urx.Robot("192.168.1.96")
 
