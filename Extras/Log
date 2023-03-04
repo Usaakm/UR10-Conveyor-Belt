@@ -1,0 +1,34 @@
+Github and Downloads Log
+
+https://insiders.vscode.dev/+ms-vscode.remote-server/0P7IMU5_PR1M3
+
+https://github.com/Usaakm/UR10-Conveyor-Belt.git
+
+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
+
+
+
+
+ERROR: the system appears to be configured for the legacy camera stack
+
+
+
+
+sudo apt-get install -y raspistill
+
+sudo apt-get update && sudo apt-get upgrade
+sudo apt-get install libcamera libcamera-utils libcamera-dev
+sudo systemctl stop raspberrypi-legacy-camera.service
+sudo systemctl disable raspberrypi-legacy-camera.service
+
+
+
+pi@raspberrypi:~ $ sudo apt-get install libcamera libcamera-utils libcamera-dev
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+E: Unable to locate package libcamera
+E: Unable to locate package libcamera-utils
+
+
+cat /etc/os-release

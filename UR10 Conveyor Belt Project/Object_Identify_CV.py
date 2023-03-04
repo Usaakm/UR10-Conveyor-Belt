@@ -1,0 +1,54 @@
+import cv2
+import numpy as np
+
+
+cap = cv2.VideoCapture(0)
+convyor_belt_height = 720
+convyor_belt_width = 500
+width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)   # float `width`
+height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
+
+
+print(width,height)
+
+
+# Conveyor belt library
+while True:
+    ret, frame = cap.read()    
+    # Belt
+    frame = cv2.flip(frame, 1)
+
+    belt = frame #[0: convyor_belt_height, 0: convyor_belt_width]
+    gray_belt = cv2.cvtColor(belt, cv2.COLOR_BGR2GRAY)
+    _, threshold = cv2.threshold(gray_belt, 80, 255, cv2.THRESH_BINARY)
+
+    # Detect the object
+    contours, hierarchy = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        (x, y, w, h) = cv2.boundingRect(cnt)
+        
+        # Calculate area
+        area = cv2.contourArea(cnt)
+        
+        # # Distinguish small and big nuts
+        # if area > 400:
+        #     # big nut
+        #     cv2.rectangle(belt, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            
+        #     # Stop belt
+        # elif 100 < area < 400:
+        #     cv2.rectangle(belt, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            
+        cv2.putText(belt, str(area), (x, y), 1, 1, (0, 255, 0))
+        cv2.rectangle(belt, (x, y), (x + w, y + h), (255, 0, 0), 2)
+    
+    cv2.imshow("Frame", frame)
+    cv2.imshow("belt", belt)
+    #cv2.imshow("threshold", threshold)
+    
+    key = cv2.waitKey(1)
+    if key == 27:
+        break
+ 
+cap.release()
+cv2.destroyAllWindows()
