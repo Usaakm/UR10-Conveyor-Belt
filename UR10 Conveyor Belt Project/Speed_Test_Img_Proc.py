@@ -1,31 +1,3 @@
-# import picamera
-# import picamera.array
-# import cv2
-
-# with picamera.PiCamera() as camera:
-#     camera.resolution = (1920, 1080) # set the camera resolution
-#     camera.framerate = 30 # set the camera framerate
-#     with picamera.array.PiRGBArray(camera, size=(1920, 1080)) as output:
-#         # capture frames from the camera
-#         for frame in camera.capture_continuous(output, format='bgr', use_video_port=True):
-#             # convert the captured frame to an OpenCV image
-#             image = frame.array
-
-#             # display the image using OpenCV
-#             cv2.imshow("Frame", image)
-
-#             # clear the stream for the next frame
-#             output.truncate(0)
-
-#             # break the loop if the 'q' key is pressed
-#             if cv2.waitKey(1) & 0xFF == ord('q'):
-#                 break
-
-# cv2.destroyAllWindows()
-
-
-
-
 import picamera
 import picamera.array
 import cv2
@@ -36,13 +8,13 @@ import time
 # Camera_Resulution_Height = 480
 
 # Medium Camera resolution 
-Camera_Resulution_Width = 1024
-Camera_Resulution_Height = 768
+# Camera_Resulution_Width = 1024
+# Camera_Resulution_Height = 768
 
 
 # High Camera resolution 
-# Camera_Resulution_Width = 2028
-# Camera_Resulution_Height = 1520
+Camera_Resulution_Width = 2032
+Camera_Resulution_Height = 1520
 
 
 # Conveyor belt dimensions
@@ -85,6 +57,7 @@ with picamera.PiCamera() as camera:
             # image = cv2.undistort(frame, cameraMatrix, dist, None)
 
             start_time = time.time()
+
             image = frame.array
             #image = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             # Process the image to detect objects on the conveyor belt
@@ -109,11 +82,15 @@ with picamera.PiCamera() as camera:
                     cv2.drawContours(image, [cnt], -1, (0, 255, 0), 4)           
                     cv2.putText(belt, str(area), (x, y), 1, 3, (0, 255, 0))
                 #cv2.rectangle(belt, (x, y), (x + w, y + h), (255, 0, 0), 2)
-           
-           
-            fps = 1 / (time.time() - start_time)
-            cv2.putText(image, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            # Calculate the time difference
+            end_time = time.time()
+            detection_time = end_time - start_time
+            print(detection_time)
 
+            # Display the image using OpenCV
+            cv2.putText(image, f"Detection Time: {detection_time:.4f} seconds", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            cv2.imshow("Frame", image)
+            
             # display the image using OpenCV
             cv2.imshow("Frame", image)
             #cv2.imshow("Belt", threshold)
@@ -122,17 +99,10 @@ with picamera.PiCamera() as camera:
             output.truncate(0)
 
             # break the loop if the 'q' key is pressed
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            # if cv2.waitKey(1) & 0xFF == ord('q'):
+            #     break
+            if detection_time != 0:
                 break
             
 
 cv2.destroyAllWindows()
-
-
-
-
-
-
-
-
-            #cv2.putText(image, f"Detection Time: {detection_time:.4f} seconds", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
