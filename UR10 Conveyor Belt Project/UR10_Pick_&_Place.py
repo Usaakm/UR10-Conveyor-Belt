@@ -32,7 +32,7 @@ with picamera.PiCamera() as camera:
     camera.awb_mode = 'auto'
     camera.exposure_compensation = 0
     camera.resolution = (Camera_Resulution_Width, Camera_Resulution_Height) # set the camera resolution
-    #camera.framerate = 60 # set the camera framerate
+    camera.framerate = 30 # set the camera framerate
     with picamera.array.PiRGBArray(camera, size=(Camera_Resulution_Width, Camera_Resulution_Height)) as output:
         
         
@@ -42,12 +42,9 @@ with picamera.PiCamera() as camera:
             start_time = time.time()
             #convert the captured frame to an OpenCV image
             frame = frame.array
-            cameraMatrix, dist = pickle.load(open("Calibration_Uni/calibration.pkl", "rb"))
+            cameraMatrix, dist = pickle.load(open("UR10 Conveyor Belt Project/Calibration_Uni/calibration.pkl", "rb"))
             image = cv2.undistort(frame, cameraMatrix, dist, None)
 
-            
-            #image = frame.array
-            #image = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             # Process the image to detect objects on the conveyor belt
             belt = image[0:Conveyor_Belt_Height, 0:Conveyor_Belt_Width]
             gray_belt = cv2.cvtColor(belt, cv2.COLOR_BGR2GRAY)
@@ -56,9 +53,8 @@ with picamera.PiCamera() as camera:
         # Detect the objects
             contours, hierarchy = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             for cnt in contours:
-                #(x, y, w, h) = cv2.boundingRect(cnt)
-                
-                # Calculate areaq
+
+                # Calculate area & Perimeter
                 area = cv2.contourArea(cnt)
                 perimeter = cv2.arcLength(cnt, True)
 
