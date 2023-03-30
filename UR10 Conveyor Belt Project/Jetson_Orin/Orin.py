@@ -34,50 +34,52 @@ device = dai.Device(pipeline)
 queue = device.getOutputQueue("color", maxSize=4, blocking=False)
 
 
+def get_encoder_count():
+    # get the hostname
+    host = "192.168.0.2"
+    port = 50001  # initiate port no above 1024
 
-# #def server_program():
-# # get the hostname
-# host = "192.168.0.2"
-# port = 50000  # initiate port no above 1024
+    Encoder_socket = socket.socket()  # get instance
+    # look closely. The bind() function takes tuple as argument
+    Encoder_socket.bind((host, port))  # bind host address and port together
 
-# server_socket = socket.socket()  # get instance
-# # look closely. The bind() function takes tuple as argument
-# server_socket.bind((host, port))  # bind host address and port together
+    # configure how many client the server can listen simultaneously
+    Encoder_socket.listen(1)
+    UR10, address = Encoder_socket.accept()  # accept new connection
+    #print("Connection from: " + str(address))
 
-# # configure how many client the server can listen simultaneously
-# server_socket.listen(1)
-# ur10, address = server_socket.accept()  # accept new connection
-# #print("Connection from: " + str(address))
+    # receive data stream. it won't accept data packet greater than 1024 bytes
+    Ecoder_count = UR10.recv(1024).decode()
+    print(str(Ecoder_count))
+    # ur10.send(data.encode())  # send data to the client
 
-# # receive data stream. it won't accept data packet greater than 1024 bytes
-# data = ur10.recv(1024).decode()
-# print(str(data))
-# # ur10.send(data.encode())  # send data to the client
+###############################################################################
+#def send_target_location():
+# get the hostname
+host = "192.168.0.2"
+port = 50000  # initiate port no above 1024
+
+UR10_Target_Location_socket = socket.socket()  # get instance
+# look closely. The bind() function takes tuple as argument
+UR10_Target_Location_socket.bind((host, port))  # bind host address and port together
+
+# configure how many client the server can listen simultaneously
+UR10_Target_Location_socket.listen(1)
+UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
+#print("Connection from: " + str(address))
+POS_X = 1500
+POS_Y = 2500
+
+UR10_Target_Location.send(("POS_X " + str(POS_X) + "\n").encode())
+UR10_Target_Location.send(("POS_Y " + str(POS_X) + "\n").encode())
+
+# receive data stream. it won't accept data packet greater than 1024 bytes
+data = UR10_Target_Location.recv(1024).decode()
+print(str(data))
+# ur10.send(data.encode())  # send data to the client
+###############################################################################
 
 
-
-HOST = "192.168.0.2" # The remote host
-PORT = 30002 # The same port as used by the server
-
-print("Starting Program")
-
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
-time.sleep(0.5)
-
-# print("Set output 1 and 2 high")
-
-# s.send("set_digital_out(1,True)\n".encode())
-# time.sleep(0.1)
-
-# s.send("set_digital_out(2,False)" + "\n")
-# time.sleep(2)
-
-print("Robot starts Moving to 3 positions based on joint positions")
-
-#s.send("movej(p[-0.06, -0.72, 0.03, 3.1, 0, 0], a=0.5, v=0.25)\n".encode())
-#time.sleep(10)
 do = True
 
 # Main loop
@@ -121,10 +123,11 @@ while True:
             cv2.putText(image, "Y {:.2f} CM".format(y/pixel_cm_ratio), (int(x - 40), int(y + 35)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
             new = -0.135 - (x/10)
             new = new/100
-            while do :
-                s.send("movej(p[0.4, -0.999, 0.03, 3.1, 0, 0], a=0.5, v=0.25)\n".encode())
-                print(new)
-                do= False
+            
+            # while do :
+            #     s.send("movej(p[0.4, -0.999, 0.03, 3.1, 0, 0], a=0.5, v=0.25)\n".encode())
+            #     print(new)
+            #     do= False
 
 
 
