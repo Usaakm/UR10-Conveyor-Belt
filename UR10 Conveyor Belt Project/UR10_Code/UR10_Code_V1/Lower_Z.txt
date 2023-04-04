@@ -1,0 +1,6 @@
+ Program
+   Robot Program
+     current_pose = get_actual_tcp_pose()
+     Tracking Conveyor 1
+       new_pose = p[current_pose[0], current_pose[1], current_pose[2] + 0.1, current_pose[3] , current_pose[4], current_pose[5]]
+       movej(new_pose , a = 0.1, v =0.1)

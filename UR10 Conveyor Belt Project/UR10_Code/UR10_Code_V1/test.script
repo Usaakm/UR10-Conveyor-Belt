@@ -1,0 +1,183 @@
+def test():
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  set_runstate_standard_digital_output_to_value(7, 2)
+  set_tool_voltage(12)
+  set_tcp(p[0.0,0.0,0.177,0.0,0.0,0.0])
+  set_payload(0.62, [0.0, 0.0, 0.09])
+  step_count_f471d901_1a12_46d5_a35b_3cc0f951d1cd = 0.0
+  thread Step_Counter_Thread_8170f8b3_280c_468b_b68f_f630a87fdc3f():
+    while (True):
+      step_count_f471d901_1a12_46d5_a35b_3cc0f951d1cd = step_count_f471d901_1a12_46d5_a35b_3cc0f951d1cd + 1.0
+      sync()
+    end
+  end
+  run Step_Counter_Thread_8170f8b3_280c_468b_b68f_f630a87fdc3f()
+  set_safety_mode_transition_hardness(1)
+  set_gravity([0.0, 0.0, 9.82])
+  global i_z_start=100
+  global Conveyor=p[-0.6004473279455352,-0.263741565334468,0.015939600744130977,0.09575441144599209,-0.08867357457834127,-1.568576085925291]
+  global table=p[0.260641832324878,0.5800637745710332,0.028009748668278572,0.558374120907397,3.0911728006228736,-5.53707866320477E-4]
+  encoder_enable_pulse_decode(0, 1, 0, 1)
+  def start_conveyor_tracking0():
+    track_conveyor_linear(pose_sub(p[-0.8539403151199703,-0.46210801269858565,-0.1603226202019039,-3.134793549007148,-0.20162972403430834,-3.590269980813882E-4], p[0.8268537208189045,-0.45437899628813316,-0.1663478175542951,-3.134731863517781,-0.20159235158378952,-2.68345437497033E-4]), 13333, 0)
+  end
+  rtde_set_watchdog("speed_slider_mask", 10.0, "ignore")
+  # begin: URCap Installation Node
+  #   Source: SMC Vacuum Gripper Unit, 1.0.0, SMC Corporation.
+  #   Type: SMC Vacuum Gripper Unit
+  thValRawVoltage = 0
+  vacuumUnitIsMonitoring = False
+  vacuumUnitAdsorbLevel = 0
+  thread threadVacuumMonitor():
+    while (True):
+      if (vacuumUnitIsMonitoring == True):
+        if (vacuumUnitAdsorbLevel != 0):
+          thValCheckTime = 100
+          thValWaitTime = 0
+          thValCurrentLevel = 0
+          while (vacuumUnitAdsorbLevel < thValCurrentLevel):
+            thValRawVoltage = get_tool_analog_in(0)
+            thValCurAna = thValRawVoltage - 1
+            thValVoltage = thValCurAna / 0.9145
+            if (thValVoltage < 0):
+              thValCurrentLevel = 0
+            elif (thValVoltage > 4):
+              thValCurrentLevel = -101
+            else:
+              thValCurrentLevel = -(thValVoltage * 25.25)
+            end
+            thValWaitTime = thValWaitTime+1
+            if (thValWaitTime > thValCheckTime):
+              set_standard_digital_out(5, False)
+              set_standard_digital_out(7, True)
+              popup("Air leakage detected on workpiece.", error = True, blocking = False)
+              halt
+            end
+            sync()
+          end
+        end
+      end
+      sync()
+    end
+  end
+  threadVacuumMonitorHandle = run threadVacuumMonitor()
+  # end: URCap Installation Node
+  def Initialize():
+    $ 12 "Initialize" "noBreak"
+    $ 13 "MoveJ"
+    $ 14 "Waypoint_3" "breakAfter"
+    movej(get_inverse_kin(p[-.451154755052, -.752968774117, .124773726248, -2.923765600523, 1.080615064566, .096841454447], qnear=[0.860284209251404, -1.1044934431659144, 1.6700482368469254, -2.105380837117334, -1.6426342169391077, -3.1415926535897913]), a=1.3962634015954636, v=1.0471975511965976)
+  end
+  def Orin_Variables():
+    $ 15 "Orin_Variables" "noBreak"
+    $ 16 "socket_open('192.168.0.3', 50000, 'Orin_Target')"
+    socket_open("192.168.0.3", 50000, "Orin_Target")
+    $ 17 "encoder_target≔0"
+    global encoder_target=0
+    $ 18 "Y≔socket_get_var('POS_Y', 'Orin_Target')"
+    global Y=socket_get_var("POS_Y", "Orin_Target")
+    $ 19 "Y≔Y / 1000"
+    global Y=Y / 1000
+  end
+  def Picking():
+    $ 20 "Picking" "noBreak"
+    $ 21 "movej(p[-0.6, Y,  0.02, -3.02037, 0.59482, -0.03077], a  = accel, v = vel)"
+    movej(p[-0.6, Y,  0.02, -3.02037, 0.59482, -0.03077], a  = accel, v = vel)
+    # begin: URCap Program Node
+    #   Source: SMC Vacuum Gripper Unit, 1.0.0, SMC Corporation.
+    #   Type: SMC Vacuum Gripper Unit
+    $ 22 "Adsorb : SMC Vacuum gripper unit"
+    vacuumUnitIsMonitoring = False
+    vacuumUnitAdsorbLevel = 0
+    set_standard_digital_out(5, False)
+    set_standard_digital_out(6, False)
+    set_standard_digital_out(7, False)
+    set_tool_digital_out(0, True)
+    set_tool_digital_out(1, False)
+    set_payload_mass(0.05)
+    # end: URCap Program Node
+    $ 24 "Tracking Conveyor 1"
+    start_conveyor_tracking0()
+    $ 25 "current_pose≔get_actual_tcp_pose()" "noBreak"
+    global current_pose=get_actual_tcp_pose()
+    $ 26 "current_pose≔p[current_pose[0], current_pose[1], current_pose[2] - 0.015, current_pose[3], current_pose[4], current_pose[5]]" "noBreak"
+    global current_pose=p[current_pose[0], current_pose[1], current_pose[2] - 0.015, current_pose[3], current_pose[4], current_pose[5]]
+    stop_conveyor_tracking()
+  end
+  def Place():
+    $ 27 "Place" "noBreak"
+    $ 28 "MoveJ"
+    $ 29 "Waypoint_1" "breakAfter"
+    movej(get_inverse_kin(p[-.829898219887, .242709297553, .213316803614, -1.632747702620, 2.615834550190, .050011096972], qnear=[-0.4580171743976038, -1.1882203261004882, 1.617923259735115, -1.9665911833392684, -1.6422990004168883, -3.141592653589793]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 30 "Waypoint_2" "breakAfter"
+    movej(get_inverse_kin(p[-.829879963766, .285880468770, .029908365977, -1.572724609911, 2.653139578639, .052051080706], qnear=[-0.5023611227618607, -1.0153029600726526, 1.729678630828858, -2.254271332417625, -1.642586056386131, -3.141592653589793]), a=1.3962634015954636, v=1.0471975511965976)
+    # begin: URCap Program Node
+    #   Source: SMC Vacuum Gripper Unit, 1.0.0, SMC Corporation.
+    #   Type: SMC Vacuum Gripper Unit
+    $ 31 "Release : SMC Vacuum gripper unit"
+    vacuumUnitIsMonitoring = False
+    vacuumUnitAdsorbLevel = 0
+    set_standard_digital_out(5, False)
+    set_standard_digital_out(6, False)
+    set_standard_digital_out(7, False)
+    set_tool_digital_out(0, False)
+    set_tool_digital_out(1, True)
+    vacuumBreakTime = 50
+    blowOffWaitTime = 0
+    while (blowOffWaitTime < vacuumBreakTime):
+      blowOffWaitTime = blowOffWaitTime+1
+      sync()
+    end
+    set_tool_digital_out(0, False)
+    set_tool_digital_out(1, False)
+    set_payload_mass(0.0)
+    # end: URCap Program Node
+    $ 32 "Waypoint_4" "breakAfter"
+    movej(get_inverse_kin(p[-.829857828235, .285966482247, .227061357782, -1.574200456620, 2.652198933433, .052187178289], qnear=[-0.5027087370501953, -1.1774752775775355, 1.5775914192199698, -1.9400194326983824, -1.642622296010141, -3.141592653589793]), a=1.3962634015954636, v=1.0471975511965976)
+  end
+  $ 33 "Thread_1"
+  thread Thread_1():
+    while (True):
+      $ 34 "socket_open('192.168.0.121', 50001, 'Orin_Encoder')"
+      socket_open("192.168.0.121", 50001, "Orin_Encoder")
+      $ 35 "Loop"
+      while (True):
+        $ 36 "Encoder_Count≔encoder_get_tick_count(0)"
+        global Encoder_Count=encoder_get_tick_count(0)
+        $ 37 "socket_send_line(Encoder_Count, 'Orin_Encoder')"
+        socket_send_line(Encoder_Count, "Orin_Encoder")
+        $ 38 "Wait: 0.05"
+        sleep(0.05)
+      end
+    end
+  end
+  threadId_Thread_1 = run Thread_1()
+  while (True):
+    $ 1 "Robot Program"
+    $ 2 "accel≔0.1"
+    global accel=0.1
+    $ 3 "vel≔0.1"
+    global vel=0.1
+    $ 4 "Call Initialize"
+    Initialize()
+    $ 5 "Call Orin_Variables"
+    Orin_Variables()
+    $ 6 "If Y < -0.15"
+    if (Y < -0.15):
+      $ 7 "Call Orin_Variables"
+      Orin_Variables()
+    else:
+      $ 8 "Else" "noBreak"
+      $ 9 "Call Picking"
+      Picking()
+    end
+    $ 11 "Call Place"
+    Place()
+  end
+end

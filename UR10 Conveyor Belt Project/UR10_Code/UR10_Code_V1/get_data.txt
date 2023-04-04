@@ -1,0 +1,6 @@
+ Program
+   Robot Program
+     data≔[0.0, 0.0, 0.0]
+     camera = rpc_factory("xmlrpc","http://127.0.0.1:5000")
+     data = camera.get_next_pick()
+     Popup
