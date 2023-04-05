@@ -344,54 +344,54 @@
 
 #     main_loop(queue)
 
-import keyboard
-import time
-import socket
+# import keyboard
+# import time
+# import socket
 
-def run_encoder_simulator():
-    # Define the resolution of the encoder (13333 ticks per meter)
-    TICKS_PER_METER = 13333
+# def run_encoder_simulator():
+#     # Define the resolution of the encoder (13333 ticks per meter)
+#     TICKS_PER_METER = 13333
 
-    # Define the desired speed (0.25 meters per second)
-    SPEED = 0.25
+#     # Define the desired speed (0.25 meters per second)
+#     SPEED = 0.25
 
-    # Initialize the encoder value to 0
-    encoder_value = 0
+#     # Initialize the encoder value to 0
+#     encoder_value = 0
 
-    # Set up TCP socket for sending data
-    TCP_IP = "192.168.0.121"  # IP address of the destination device
-    TCP_PORT = 50001  # Port number for the destination application
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((TCP_IP, TCP_PORT))
+#     # Set up TCP socket for sending data
+#     TCP_IP = "192.168.0.121"  # IP address of the destination device
+#     TCP_PORT = 50001  # Port number for the destination application
+#     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#     sock.connect((TCP_IP, TCP_PORT))
 
-    # Define a function to update the encoder value based on key presses
-    def update_encoder():
-        nonlocal encoder_value
-        if keyboard.is_pressed('up'):
-            # Compute the change in encoder value based on the elapsed time and desired speed
-            dt = 1 # Use a fixed time interval of 1 second
-            ds = (SPEED * dt)/200
-            dencoder = ds * TICKS_PER_METER
-            encoder_value += int(dencoder)  # Convert to integer ticks
+#     # Define a function to update the encoder value based on key presses
+#     def update_encoder():
+#         nonlocal encoder_value
+#         if keyboard.is_pressed('up'):
+#             # Compute the change in encoder value based on the elapsed time and desired speed
+#             dt = 1 # Use a fixed time interval of 1 second
+#             ds = (SPEED * dt)/200
+#             dencoder = ds * TICKS_PER_METER
+#             encoder_value += int(dencoder)  # Convert to integer ticks
 
-        elif keyboard.is_pressed('down'):
-            # Compute the change in encoder value based on the elapsed time and desired speed
-            dt = 1  # Use a fixed time interval of 1 second
-            ds = (SPEED * dt)/200
-            dencoder = ds * TICKS_PER_METER
-            encoder_value -= int(dencoder)  # Convert to integer ticks
+#         elif keyboard.is_pressed('down'):
+#             # Compute the change in encoder value based on the elapsed time and desired speed
+#             dt = 1  # Use a fixed time interval of 1 second
+#             ds = (SPEED * dt)/200
+#             dencoder = ds * TICKS_PER_METER
+#             encoder_value -= int(dencoder)  # Convert to integer ticks
 
-    # Continuously update the encoder value based on key presses
-    while True:
-        update_encoder()
+#     # Continuously update the encoder value based on key presses
+#     while True:
+#         update_encoder()
 
-        # Convert the encoder value to meters and send it over TCP
-        distance = encoder_value / TICKS_PER_METER
-        message = f"Encoder value: {encoder_value} ticks ({distance:.3f} meters)"
-        sock.sendall(message.encode(ascii))
+#         # Convert the encoder value to meters and send it over TCP
+#         distance = encoder_value / TICKS_PER_METER
+#         message = f"Encoder value: {encoder_value} ticks ({distance:.3f} meters)"
+#         sock.sendall(message.encode(ascii))
 
-        time.sleep(0.01)
+#         time.sleep(0.01)
 
-    sock.close()
+#     sock.close()
 
-run_encoder_simulator()
+# run_encoder_simulator()
