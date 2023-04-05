@@ -43,25 +43,25 @@ PORT = 30002 # The same port as used by the server
 # import socket
 
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
+# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# s.connect((HOST, PORT))
 
-s.send ("set_digital_out(2,False)" + "\n")
+# s.send ("set_digital_out(2,True)" + "\n")
 
-data = s.recv(1024)
+# data = s.recv(1024)
 
-s.close()
+# s.close()
 
-print ("Received", repr(data))
-
-
+# print ("Received", repr(data))
 
 
-# Echo client program
+
+
+# # Echo client program
 # import socket
 
 # HOST = "192.168.0.2" # The remote host
-# PORT = 30002 # The same port as used by the server
+# PORT = 50000 # The same port as used by the server
 
 # while True:
 
@@ -70,19 +70,71 @@ print ("Received", repr(data))
 
 
 
+#     s.send("True".encode())
 
+#     data = s.recv(1024).decode('ascii')
 
+#     message_recieved = data
 
-#     s.send("hello".encode())
-
-    # data = s.recv(1024).decode('ascii')
-
-    # message_recieved = data
-
-    #print("Received", repr(message_recieved))
+#     print("Received", repr(message_recieved))
 
 
 # s.close()
+
+
+
+
+# # Echo client program
+# import socket
+# HOST = "192.168.0.2" # The remote host
+# PORT = 30002 # The same port as used by the server
+
+# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# s.connect((HOST, PORT))
+
+# s.send(("set_digital_out(3,True)" + "\n").encode())
+
+
+
+
+
+    # import time
+    # from urx import Robot
+
+    # # UR robot's IP address
+    # ROBOT_IP = '192.168.0.2'  # Replace with the actual IP address of your UR10 robot
+
+    # # Connect to the UR robot
+    # robot = Robot(ROBOT_IP)
+
+    # # Send the 'set_digital_out' command
+    # digital_output_pin = 3
+    # output_value = True
+    # robot.set_digital_out(digital_output_pin, output_value)
+
+    # # Sleep for a while to make sure the command is sent
+    # time.sleep(1)
+
+
+
+
+
+import socket
+
+# establish a TCP/IP connection to the robot controller
+robot_ip = '192.168.0.2'  # replace with the IP address of your robot
+robot_port = 30002
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((robot_ip, robot_port))
+
+# send the secondary program to the robot controller
+secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
+sock.send(secondary_program.encode())
+
+# close the TCP/IP connection
+sock.close()
+
+
 
 
 
@@ -225,4 +277,68 @@ print ("Received", repr(data))
 #     #     data = conn.recv(1024).decode()
 #     #     print(str(data))
 #     #     conn.send("movel([-0.7, -0.7, 0.6, 0.3, 0.1, 0], a=1.0, v=0.1)" + "\n")
+
+# # # Python code
+# import socket
+
+# # Set the IP address and port of the robot
+# HOST = '192.168.0.2'  # Replace with the IP address of your robot
+# PORT = 30002  # Default port for UR robots
+
+# # Create the socket object
+# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# # Connect to the robot
+# s.connect((HOST, PORT))
+
+# # set 'ready' to True
+# ready = True
+# # send command to client to update 'ready' variable
+# s.send(("ready " + str(ready == True).lower() + "\n").encode())
+
+
+# Python code
+# Send the command to set the boolean variable to True
+# command = "ready = True\n"
+# s.send(command.encode())
+# # Python code
+# Close the socket connection
+
+
+
+# # Python code
+
+# import socket
+
+# # set up socket connection
+# HOST = ""  # IP address of UR10 robot
+# PORT = 30002  # port number for socket communication
+# sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# sock.connect((HOST, PORT))
+
+# while True :# send a string message
+#     message = "True".encode()
+#     sock.send(message)
+
+
+# host = ""
+# port = 30002  # initiate port no above 1024
+
+# UR10_Target_Location_socket = socket.socket()  # get instance
+# # look closely. The bind() function takes tuple as argument
+# UR10_Target_Location_socket.bind((host, port))  # bind host address and port together
+
+# # configure how many client the server can listen simultaneously
+# UR10_Target_Location_socket.listen(1)
+# UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
+
+
+
+
+    
+
+
+# UR10_Target_Location.send("set_digital_out(2,True)" + "\n").encode()
+
+
 

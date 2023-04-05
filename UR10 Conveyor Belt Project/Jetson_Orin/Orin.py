@@ -400,7 +400,7 @@ color_cam.initialControl.setManualFocus(0)
 
 # Set manual exposure and initial exposure time
 exposure_time_us = 10000
-iso_value = 900
+iso_value = 400
 color_cam.initialControl.setManualExposure(exposure_time_us, iso_value)
 
 # Define output nodes
@@ -414,7 +414,14 @@ color_cam.preview.link(xout.input)
 device = dai.Device(pipeline)
 color_queue = device.getOutputQueue("color", maxSize=4, blocking=False)
 
+
 encoder_count_queue = queue.Queue()
+global x_ur10
+stored_x = None
+stored_y = None
+
+
+
 
 def get_encoder_count(queue):
     # get the hostname
@@ -431,9 +438,66 @@ def get_encoder_count(queue):
     while True: 
         # receive data stream. it won't accept data packet greater than 1024 bytes
         Encoder_count = UR10.recv(1024).decode()
+        #print(Encoder_count)
         queue.put(Encoder_count)
 
 # # ###############################################################################
+
+# def send_target_location(POS_Y, x_ur10):
+#     # get the hostname
+#     host = ""
+#     port = 50000  # initiate port no above 1024
+
+#     UR10_Target_Location_socket = socket.socket()  # get instance
+#     # look closely. The bind() function takes tuple as argument
+#     UR10_Target_Location_socket.bind((host, port))  # bind host address and port together
+
+#     # configure how many client the server can listen simultaneously
+#     UR10_Target_Location_socket.listen(1)
+#     UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
+#     #print("Connection from: " + str(address))
+
+#     global Target_Encoder
+   
+#     Target_Encoder = 0
+
+#     while True:
+     
+        
+#                 # host = ""
+#                 # port = 30002  # initiate port no above 1024
+
+#                 # UR10_Target_Location_socket = socket.socket()  # get instance
+#                 # # look closely. The bind() function takes tuple as argument
+#                 # UR10_Target_Location_socket.bind((host, port))  # bind host address and port together
+
+#                 # # configure how many client the server can listen simultaneously
+#                 # UR10_Target_Location_socket.listen(1)
+#                 # UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
+
+#                 # UR10_Target_Location.send((str(True)).encode())
+
+
+#         #Get Encoder_count from queue
+#         if not encoder_count_queue.empty():
+#             Encoder_count = encoder_count_queue.get()
+#             Target_Encoder = Encoder_count + 17472
+
+
+#         POS_Y_0 = 135.30
+#         X_ur10 = (x_ur10/pixel_cm_ratio)*10
+#         POS_Y = -1 * (X_ur10 + POS_Y_0)
+#         print(POS_Y)
+#         # UR10_Target_Location.send(("POS_X " + str(POS_X) + "\n").encode())
+#         UR10_Target_Location.send(("POS_Y " + str(POS_Y) + "\n").encode())
+
+#         #UR10_Target_Location.send(("POS_X " + str(POS_X) + "\n").encode())
+   
+    
+#     Bool_UR10.send((str(True)).encode())
+
+#     #time.sleep(0.3)
+  
 
 def send_target_location(POS_Y):
     # get the hostname
@@ -450,45 +514,39 @@ def send_target_location(POS_Y):
     #print("Connection from: " + str(address))
 
     global Target_Encoder
-    global x_ur10
     Target_Encoder = 0
 
     while True:
-        #data = UR10_Target_Location.recv(1024).decode()
-        data = "set ready = True\n"
-        # print(str(data))
-        UR10_Target_Location.send(data.encode())  # send data to the client
-            
-
-
-    #Get Encoder_count from queue
-        if not encoder_count_queue.empty():
-            Encoder_count = encoder_count_queue.get()
-#                print(Encoder_count)
-
-            #Target_Encoder = Encoder_count + 13333
-            POS_Y_0 = 135.30
-            X_ur10 = (x/pixel_cm_ratio)*10
-            POS_Y = -1 * (X_ur10 + POS_Y_0)
-            Target_Encoder = Encoder_count + str(5000)
-
-                #print(POS_Y)
-
-
-        # UR10_Target_Location.send(("POS_X " + str(POS_X) + "\n").encode())
+        # Get Encoder_count from queue if stored_x is not None
+        
+        print("Pos y ",POS_Y)
         UR10_Target_Location.send(("POS_Y " + str(POS_Y) + "\n").encode())
+        time.sleep(0.05)
 
-        #UR10_Target_Location.send(("POS_X " + str(POS_X) + "\n").encode())
-        UR10_Target_Location.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
+    
+ 
+
+def Boolean(stored_x):
+    #print('Boolean function executed with stored_x =', stored_x)
+    robot_ip = '192.168.0.2'  # replace with the IP address of your robot
+    robot_port = 30002
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((robot_ip, robot_port))
+
+    
+    # while  stored_x is not None:
+    #     print('Boolean function executed with stored_x =', stored_x)
+    #     if stored_x is None:
+    #         break
+    #     print("Boolean")
+        # establish a TCP/IP connection to the robot controller
+        # send the secondary program to the robot controller
+    secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
+    sock.send(secondary_program.encode())
+    # close the TCP/IP connection
+    sock.close()
 
 
-
-
-
-
-
-
-# ###############################################################################
 
 encoder_count_queue = queue.Queue()
 t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_queue,))
@@ -498,21 +556,23 @@ POS_Y = 0
 t2 = threading.Thread(target=send_target_location, args=(POS_Y,))
 t2.start()
 
-# Initialize stored_x and stored_y
-stored_x = None
-stored_y = None
-# Define a threshold for the y-coordinate
-y_threshold = 20  
+# t3 = threading.Thread(target=Boolean, args=(stored_x,))
+# t3.start()
 
+# Initialize stored_x and stored_y
+
+# Define a threshold for the y-coordinate
+y_threshold = 100
+t3 = None
 # Main loop
 while True:
     in_frame = color_queue.get()
     image = in_frame.getCvFrame()
     image = image[0:1080, 210:1725]
     gray_belt = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gray_belt_blurred = cv2.GaussianBlur(gray_belt, (5, 5), 0)
-    _, threshold = cv2.threshold(gray_belt_blurred, 110, 255, cv2.THRESH_BINARY)
-
+    #gray_belt_blurred = cv2.GaussianBlur(gray_belt, (5, 5), 0)
+    _, threshold = cv2.threshold(gray_belt, 130, 255, cv2.THRESH_BINARY)
+    
     # Detect the objects
     contours, hierarchy = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     object_detected = False
@@ -539,7 +599,7 @@ while True:
         object_height = h / pixel_cm_ratio
 
         # Draw contour and polygon on original image
-        if area > 90000 and area < 110000:
+        if area > 30000 and area < 37000:
             cv2.circle(image, (int(x), int(y)), 5, (0, 0, 255), -1)
             cv2.polylines(image, [box], True, (255, 0, 0), 2)
             cv2.putText(image, "Width {:.2f} cm".format(object_width, 0), (int(x - 40), int(y - 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
@@ -550,7 +610,7 @@ while True:
             current_x = x
             current_y = y
             object_detected = True
-            h = y
+            d = y
             
     # Check if the object has left the camera's field of view
     object_left_view = stored_y is not None and stored_y < y_threshold
@@ -569,18 +629,35 @@ while True:
     # Update stored_y
     if object_detected:
         stored_y = current_y
-    global x_ur10
-    x_ur10 = stored_x
-    print("-- ",stored_x, " -- ", h )
+
+
+        
+    #x_ur10 = stored_x
+    if stored_x is not None:
+        t3 = threading.Thread(target=Boolean, args=(stored_x,))
+        t3.start()
+
+    if stored_x is not None :#and not encoder_count_queue.empty():
+            # Encoder_count = encoder_count_queue.get()
+            # Target_Encoder = Encoder_count + 17472
+            POS_Y_0 = 135.30
+            if stored_x is not None:
+                X_ur10 = (stored_x/pixel_cm_ratio)*10
+                POS_Y = -1 * (X_ur10 + POS_Y_0)
+                send_target_location(POS_Y)
+
+    #print("bottom ",POS_Y)
+    #print("-- ",stored_x)
 
 
     cv2.imshow("Frame", image)
+    #cv2.imshow("Canny", threshold)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
         break
 
 
-
+# y is not working, need to add the target encoder count.
 
 
