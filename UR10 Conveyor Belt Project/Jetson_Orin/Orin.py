@@ -400,7 +400,7 @@ color_cam.initialControl.setManualFocus(0)
 
 # Set manual exposure and initial exposure time
 exposure_time_us = 10000
-iso_value = 600
+iso_value = 900
 color_cam.initialControl.setManualExposure(exposure_time_us, iso_value)
 
 # Define output nodes
@@ -448,24 +448,45 @@ def send_target_location(POS_Y):
     UR10_Target_Location_socket.listen(1)
     UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
     #print("Connection from: " + str(address))
+
     global Target_Encoder
+    global x_ur10
     Target_Encoder = 0
 
     while True:
-        data = UR10_Target_Location.recv(1024).decode()
-        # if data:
+        #data = UR10_Target_Location.recv(1024).decode()
+        data = "set ready = True\n"
+        # print(str(data))
+        UR10_Target_Location.send(data.encode())  # send data to the client
             
+
+
+    #Get Encoder_count from queue
+        if not encoder_count_queue.empty():
+            Encoder_count = encoder_count_queue.get()
+#                print(Encoder_count)
+
+            #Target_Encoder = Encoder_count + 13333
+            POS_Y_0 = 135.30
+            X_ur10 = (x/pixel_cm_ratio)*10
+            POS_Y = -1 * (X_ur10 + POS_Y_0)
+            Target_Encoder = Encoder_count + str(5000)
+
+                #print(POS_Y)
+
+
         # UR10_Target_Location.send(("POS_X " + str(POS_X) + "\n").encode())
         UR10_Target_Location.send(("POS_Y " + str(POS_Y) + "\n").encode())
 
         #UR10_Target_Location.send(("POS_X " + str(POS_X) + "\n").encode())
         UR10_Target_Location.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
 
-        # receive data stream. it won't accept data packet greater than 1024 bytes
-        
-        print(str(data))
-        # ur10.send(data.encode())  # send data to the client
-        print(POS_Y)
+
+
+
+
+
+
 
 # ###############################################################################
 
@@ -476,6 +497,12 @@ t1.start()
 POS_Y = 0
 t2 = threading.Thread(target=send_target_location, args=(POS_Y,))
 t2.start()
+
+# Initialize stored_x and stored_y
+stored_x = None
+stored_y = None
+# Define a threshold for the y-coordinate
+y_threshold = 20  
 
 # Main loop
 while True:
@@ -489,8 +516,9 @@ while True:
     # Detect the objects
     contours, hierarchy = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     object_detected = False
-    valid_contour_count = 0
-    required_contour_count = 5
+    # Loop through contours
+    current_x = None
+    current_y = None
 
     for cnt in contours:
         # Calculate area & Perimeter
@@ -519,22 +547,40 @@ while True:
             cv2.putText(image, "X {:.2f} CM".format(x/pixel_cm_ratio), (int(x - 40), int(y -35)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
             cv2.putText(image, "Y {:.2f} CM".format(y/pixel_cm_ratio), (int(x - 40), int(y + 35)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
-            # Get Encoder_count from queue
-            if not encoder_count_queue.empty():
-                Encoder_count = encoder_count_queue.get()
-#                print(Encoder_count)
+            current_x = x
+            current_y = y
+            object_detected = True
+            h = y
+            
+    # Check if the object has left the camera's field of view
+    object_left_view = stored_y is not None and stored_y < y_threshold
 
-                #Target_Encoder = Encoder_count + 13333
-                POS_Y_0 = +155.30
-                X_ur10 = (x/pixel_cm_ratio)*10
-                POS_Y = -1 * (X_ur10 + 135.30)
-                global Target_Encoder
-                Target_Encoder = Encoder_count + str(5000)
+    # Update the stored x-coordinate if the tracked object has left the camera's field of view
+    if object_detected and object_left_view:
+        stored_x = current_x
+        stored_y = current_y
+    elif object_detected and stored_x is None:
+        stored_x = current_x
+        stored_y = current_y
+    elif object_left_view:
+        stored_x = None
+        stored_y = None
 
-                #print(POS_Y)
+    # Update stored_y
+    if object_detected:
+        stored_y = current_y
+    global x_ur10
+    x_ur10 = stored_x
+    print("-- ",stored_x, " -- ", h )
+
 
     cv2.imshow("Frame", image)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
         break
+
+
+
+
+
