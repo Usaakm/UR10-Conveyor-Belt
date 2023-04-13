@@ -77,28 +77,24 @@ def send_target_location(target_location_queue, encoder_count_queue):
 
 
 
-    while True:
-        encoder_count_str = encoder_count_queue.get().strip()  # Remove any whitespace or newline characters
-        encoder_count = int(float(encoder_count_str))  # Convert the string to a float, then to an integer
-        Target_Encoder = encoder_count + 17472
+    while True:    
+        # encoder_count_str = encoder_count_queue.get().strip()  # Remove any whitespace or newline characters
+        # encoder_count = int(float(encoder_count_str))  # Convert the string to a float, then to an integer
+        # Target_Encoder = encoder_count + 17472
 
         data = UR10_Target_Location.recv(1024).decode()
-  
+
         POS_Y = target_location_queue.get()
         UR10_Target_Location.send(("POS_Y " + str(POS_Y) + "\n").encode())
-        UR10_Target_Location.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
- 
+        #UR10_Target_Location.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
         print(str(data))
-        print(POS_Y, "   ", Target_Encoder )
+        #print(POS_Y, "   ", Target_Encoder )
+        print(POS_Y)
+
+
         
         
-        
-        
-        # # Get Encoder_count from queue if stored_x is not None
-        
-        # print("Pos y ",POS_Y)
-        # UR10_Target_Location.send(("POS_Y " + str(POS_Y) + "\n").encode())
-        # time.sleep(0.05)
+
 
     
  
@@ -109,19 +105,14 @@ def Boolean(stored_x):
     robot_port = 30002
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((robot_ip, robot_port))
-
-    
-    # while  stored_x is not None:
-    #     print('Boolean function executed with stored_x =', stored_x)
-    #     if stored_x is None:
-    #         break
-    #     print("Boolean")
-        # establish a TCP/IP connection to the robot controller
-        # send the secondary program to the robot controller
     secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
     sock.send(secondary_program.encode())
     # close the TCP/IP connection
     sock.close()
+    
+
+    print("done")
+    #time.sleep(3)
 
 
 
@@ -133,14 +124,11 @@ POS_Y_queue = queue.Queue()
 t2 = threading.Thread(target=send_target_location, args=(POS_Y_queue, encoder_count_queue,))
 t2.start()
 
-# t3 = threading.Thread(target=Boolean, args=(stored_x,))
-# t3.start()
-
-# Initialize stored_x and stored_y
-
 # Define a threshold for the y-coordinate
 y_threshold = 100
 t3 = None
+
+code_executed = False
 # Main loop
 while True:
     in_frame = color_queue.get()
@@ -189,7 +177,6 @@ while True:
             object_detected = True
             d = y
             
-    # Check if the object has left the camera's field of view
     object_left_view = stored_y is not None and stored_y < y_threshold
 
     # Update the stored x-coordinate if the tracked object has left the camera's field of view
@@ -203,27 +190,33 @@ while True:
         stored_x = None
         stored_y = None
 
+
     # Update stored_y
     if object_detected:
         stored_y = current_y
 
+    if stored_x is not None :#and not encoder_count_queue.empty():
+        # Encoder_count = encoder_count_queue.get()
+        # Target_Encoder = Encoder_count + 17472
+        POS_Y_0 = 135.30
+        if stored_x is not None:
+            X_ur10 = (stored_x/pixel_cm_ratio)*10
+            POS_Y = -1 * (X_ur10 + POS_Y_0)
+           
 
-        
-    #x_ur10 = stored_x
-    if stored_x is not None:
+
+    if stored_x is not None and not code_executed:
         t3 = threading.Thread(target=Boolean, args=(stored_x,))
         t3.start()
+        POS_Y_queue.put(POS_Y)
+        code_executed = True
+    elif not object_detected:
+        code_executed = False
 
-    if stored_x is not None :#and not encoder_count_queue.empty():
-            # Encoder_count = encoder_count_queue.get()
-            # Target_Encoder = Encoder_count + 17472
-            POS_Y_0 = 135.30
-            if stored_x is not None:
-                X_ur10 = (stored_x/pixel_cm_ratio)*10
-                POS_Y = -1 * (X_ur10 + POS_Y_0)
-                POS_Y_queue.put(POS_Y)
 
-    print("bottom ",stored_x)
+    
+
+    #print("bottom ",stored_x)
 
 
     cv2.imshow("Frame", image)
@@ -235,6 +228,5 @@ while True:
         break
 
 
-# y is not working, need to add the target encoder count.
 
 
