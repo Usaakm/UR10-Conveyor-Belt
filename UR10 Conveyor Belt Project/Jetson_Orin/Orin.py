@@ -5,6 +5,7 @@ import numpy as np
 import time 
 import socket
 import queue
+from collections import deque
 
 # Create pipeline
 pipeline = dai.Pipeline()
@@ -40,7 +41,7 @@ stored_y = None
 
 
 
-def get_encoder_count(queue):
+def get_encoder_count(encoder_count_deque):
     # get the hostname
     host = ""
     port = 50001  # initiate port no above 1024
@@ -56,46 +57,19 @@ def get_encoder_count(queue):
         # receive data stream. it won't accept data packet greater than 1024 bytes
         Encoder_count = UR10.recv(1024).decode()
         #print(Encoder_count)
-        queue.put(Encoder_count)
+        encoder_count_deque.append(Encoder_count)
+        print("-",Encoder_count)
 
 # # ###############################################################################
 
-encoder_count_queue = queue.Queue()
-t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_queue,))
+encoder_count_deque = deque()
+
+t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_deque,))
 t1.start()
 
-# def send_target_location(target_location_queue, encoder_count_queue):
-#     # get the hostname
-#     host = ""
-#     port = 50000  # initiate port no above 1024
-
-#     UR10_Target_Location_socket = socket.socket()  # get instance
-#     # look closely. The bind() function takes tuple as argument
-#     UR10_Target_Location_socket.bind((host, port))  # bind host address and port together
-
-#     # configure how many client the server can listen simultaneously
-#     UR10_Target_Location_socket.listen(1)
-#     UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
-#     #print("Connection from: " + str(address))
-
-#     while True:    
-#         encoder_count_str = encoder_count_queue.get()#.strip()  # Remove any whitespace or newline characters
-#         encoder_count = int(float(encoder_count_str))  # Convert the string to a float, then to an integer
-#         print("Encoder count:", encoder_count)
-#         Target_Encoder = encoder_count + 17472
-#         print("Target Encoder:", Target_Encoder)
-
-#         data = UR10_Target_Location.recv(1024).decode()
-#         print("Data received:", data)
-
-#         POS_Y = target_location_queue.get()
-#         #UR10_Target_Location.send(("POS_Y " + str(POS_Y) + "\n").encode())
-#         UR10_Target_Location.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
-#         print(str(data))
-#         print(POS_Y, "   ", Target_Encoder )
 
 
-def send_encoder(encoder_count_queue):
+def send_encoder(encoder_count_deque):
     host = ""
     port = 50000  # initiate port no above 1024
 
@@ -105,7 +79,8 @@ def send_encoder(encoder_count_queue):
     UR10_Encoder, address = UR10_Encoder_socket.accept()  # accept new connection
 
     while True:
-        encoder_count_str = encoder_count_queue.get()
+        encoder_count_str = encoder_count_deque[-1]
+        print("Encoder_count:", encoder_count)
         encoder_count = float(encoder_count_str)
         Target_Encoder = encoder_count + 17472
         UR10_Encoder.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
@@ -132,32 +107,11 @@ POS_Y_queue = queue.Queue()
 # t2 = threading.Thread(target=send_target_location, args=(POS_Y_queue, encoder_count_queue,))
 # t2.start()
 
-t2 = threading.Thread(target=send_encoder, args=(encoder_count_queue,))
+t2 = threading.Thread(target=send_encoder, args=(encoder_count_deque,))
 t2.start()
 
 t3 = threading.Thread(target=send_y_position, args=(POS_Y_queue,))
 t3.start()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -272,9 +226,9 @@ while True:
         code_executed = False
 
 
-    
+    i = encoder_count_deque.pop()
 
-    #print("bottom ",stored_x)
+    print(i)
 
 
     cv2.imshow("Frame", image)
