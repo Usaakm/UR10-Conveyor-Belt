@@ -16,7 +16,7 @@ color_cam.setInterleaved(False)
 color_cam.initialControl.setManualFocus(0)
 
 # Set manual exposure and initial exposure time
-exposure_time_us = 10000
+exposure_time_us = 15000
 iso_value = 400
 color_cam.initialControl.setManualExposure(exposure_time_us, iso_value)
 
@@ -60,47 +60,117 @@ def get_encoder_count(queue):
 
 # # ###############################################################################
 
+encoder_count_queue = queue.Queue()
+t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_queue,))
+t1.start()
 
-def send_target_location(target_location_queue, encoder_count_queue):
-    # get the hostname
+# def send_target_location(target_location_queue, encoder_count_queue):
+#     # get the hostname
+#     host = ""
+#     port = 50000  # initiate port no above 1024
+
+#     UR10_Target_Location_socket = socket.socket()  # get instance
+#     # look closely. The bind() function takes tuple as argument
+#     UR10_Target_Location_socket.bind((host, port))  # bind host address and port together
+
+#     # configure how many client the server can listen simultaneously
+#     UR10_Target_Location_socket.listen(1)
+#     UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
+#     #print("Connection from: " + str(address))
+
+#     while True:    
+#         encoder_count_str = encoder_count_queue.get()#.strip()  # Remove any whitespace or newline characters
+#         encoder_count = int(float(encoder_count_str))  # Convert the string to a float, then to an integer
+#         print("Encoder count:", encoder_count)
+#         Target_Encoder = encoder_count + 17472
+#         print("Target Encoder:", Target_Encoder)
+
+#         data = UR10_Target_Location.recv(1024).decode()
+#         print("Data received:", data)
+
+#         POS_Y = target_location_queue.get()
+#         #UR10_Target_Location.send(("POS_Y " + str(POS_Y) + "\n").encode())
+#         UR10_Target_Location.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
+#         print(str(data))
+#         print(POS_Y, "   ", Target_Encoder )
+
+
+def send_encoder(encoder_count_queue):
     host = ""
     port = 50000  # initiate port no above 1024
 
-    UR10_Target_Location_socket = socket.socket()  # get instance
-    # look closely. The bind() function takes tuple as argument
-    UR10_Target_Location_socket.bind((host, port))  # bind host address and port together
+    UR10_Encoder_socket = socket.socket()  # get instance
+    UR10_Encoder_socket.bind((host, port))  # bind host address and port together
+    UR10_Encoder_socket.listen(1)
+    UR10_Encoder, address = UR10_Encoder_socket.accept()  # accept new connection
 
-    # configure how many client the server can listen simultaneously
-    UR10_Target_Location_socket.listen(1)
-    UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
-    #print("Connection from: " + str(address))
-
-
-
-    while True:    
-        # encoder_count_str = encoder_count_queue.get().strip()  # Remove any whitespace or newline characters
-        # encoder_count = int(float(encoder_count_str))  # Convert the string to a float, then to an integer
-        # Target_Encoder = encoder_count + 17472
-
-        data = UR10_Target_Location.recv(1024).decode()
-
-        POS_Y = target_location_queue.get()
-        UR10_Target_Location.send(("POS_Y " + str(POS_Y) + "\n").encode())
-        #UR10_Target_Location.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
+    while True:
+        encoder_count_str = encoder_count_queue.get()
+        encoder_count = float(encoder_count_str)
+        Target_Encoder = encoder_count + 17472
+        UR10_Encoder.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
+        data = UR10_Encoder.recv(1024).decode()
         print(str(data))
-        #print(POS_Y, "   ", Target_Encoder )
-        print(POS_Y)
+
+def send_y_position(POS_Y_queue):
+    host = ""
+    port = 50002  # initiate port no above 1024
+
+    UR10_Y_Position_socket = socket.socket()  # get instance
+    UR10_Y_Position_socket.bind((host, port))  # bind host address and port together
+    UR10_Y_Position_socket.listen(1)
+    UR10_Y_Position, address = UR10_Y_Position_socket.accept()  # accept new connection
+
+    while True:
+        POS_Y = POS_Y_queue.get()
+        UR10_Y_Position.send(("POS_Y " + str(POS_Y) + "\n").encode())
+        data = UR10_Y_Position.recv(1024).decode()
+        print(str(data))
 
 
-        
-        
+POS_Y_queue = queue.Queue()
+# t2 = threading.Thread(target=send_target_location, args=(POS_Y_queue, encoder_count_queue,))
+# t2.start()
+
+t2 = threading.Thread(target=send_encoder, args=(encoder_count_queue,))
+t2.start()
+
+t3 = threading.Thread(target=send_y_position, args=(POS_Y_queue,))
+t3.start()
 
 
-    
- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def Boolean(stored_x):
-    #print('Boolean function executed with stored_x =', stored_x)
     robot_ip = '192.168.0.2'  # replace with the IP address of your robot
     robot_port = 30002
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -109,24 +179,12 @@ def Boolean(stored_x):
     sock.send(secondary_program.encode())
     # close the TCP/IP connection
     sock.close()
-    
-
-    print("done")
-    #time.sleep(3)
 
 
-
-encoder_count_queue = queue.Queue()
-t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_queue,))
-t1.start()
-
-POS_Y_queue = queue.Queue()
-t2 = threading.Thread(target=send_target_location, args=(POS_Y_queue, encoder_count_queue,))
-t2.start()
 
 # Define a threshold for the y-coordinate
 y_threshold = 100
-t3 = None
+t4 = None
 
 code_executed = False
 # Main loop
@@ -206,8 +264,8 @@ while True:
 
 
     if stored_x is not None and not code_executed:
-        t3 = threading.Thread(target=Boolean, args=(stored_x,))
-        t3.start()
+        t4 = threading.Thread(target=Boolean, args=(stored_x,))
+        t4.start()
         POS_Y_queue.put(POS_Y)
         code_executed = True
     elif not object_detected:

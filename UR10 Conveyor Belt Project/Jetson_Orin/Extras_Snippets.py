@@ -433,3 +433,63 @@
 
 #     #time.sleep(0.3)
   
+
+
+
+import socket
+import queue
+import threading
+
+def get_encoder_count(encoder_count_queue):
+    # get the hostname
+    host = ""
+    port = 50001  # initiate port no above 1024
+
+    Encoder_socket = socket.socket()  # get instance
+    # look closely. The bind() function takes tuple as argument
+    Encoder_socket.bind((host, port))  # bind host address and port together
+    # configure how many client the server can listen simultaneously
+    Encoder_socket.listen(1)
+    UR10, address = Encoder_socket.accept()  # accept new connection
+    #print("Connection from: " + str(address))
+    while True: 
+        # receive data stream. it won't accept data packet greater than 1024 bytes
+        Encoder_count = UR10.recv(1024).decode()
+        #print(Encoder_count)
+        encoder_count_queue.put(Encoder_count)
+
+def send_target_location(encoder_count_queue):
+    # get the hostname
+    host = ""
+    port = 50000  # initiate port no above 1024
+
+    UR10_Target_Location_socket = socket.socket()  # get instance
+    # look closely. The bind() function takes tuple as argument
+    UR10_Target_Location_socket.bind((host, port))  # bind host address and port together
+
+    # configure how many client the server can listen simultaneously
+    UR10_Target_Location_socket.listen(1)
+    UR10_Target_Location, address = UR10_Target_Location_socket.accept()  # accept new connection
+    #print("Connection from: " + str(address))
+
+    while True:    
+        encoder_count_str = encoder_count_queue.get()#.strip()  # Remove any whitespace or newline characters
+        encoder_count = float(encoder_count_str)  # Convert the string to a float, then to an integer
+        print("Encoder count:", encoder_count)
+        Target_Encoder = encoder_count + 17472
+        print("Target Encoder:", Target_Encoder)
+
+        data = UR10_Target_Location.recv(1024).decode()
+        print("Data received:", data)
+
+        UR10_Target_Location.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
+
+
+
+
+encoder_count_queue = queue.Queue()
+t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_queue,))
+t1.start()
+
+t2 = threading.Thread(target=send_target_location, args=(encoder_count_queue,))
+t2.start()
