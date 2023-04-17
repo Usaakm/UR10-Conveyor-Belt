@@ -54,11 +54,14 @@ def get_encoder_count(encoder_count_deque):
     UR10, address = Encoder_socket.accept()  # accept new connection
     #print("Connection from: " + str(address))
     while True: 
+        # if not encoder_count_deque:
+        #     time.sleep(0.1)  # wait for 0.1 seconds
+        #     continue  # check again
         # receive data stream. it won't accept data packet greater than 1024 bytes
         Encoder_count = UR10.recv(1024).decode()
         #print(Encoder_count)
         encoder_count_deque.append(Encoder_count)
-        print("-",Encoder_count)
+        #print("-",Encoder_count)
 
 # # ###############################################################################
 
@@ -80,11 +83,13 @@ def send_encoder(encoder_count_deque):
 
     while True:
         encoder_count_str = encoder_count_deque[-1]
-        print("Encoder_count:", encoder_count)
+        print("Encoder_count:", encoder_count_str)
         encoder_count = float(encoder_count_str)
-        Target_Encoder = encoder_count + 17472
+        Target_Encoder = encoder_count + 17702
         UR10_Encoder.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
         data = UR10_Encoder.recv(1024).decode()
+        #encoder_count_deque.clear()
+
         print(str(data))
 
 def send_y_position(POS_Y_queue):
@@ -112,14 +117,6 @@ t2.start()
 
 t3 = threading.Thread(target=send_y_position, args=(POS_Y_queue,))
 t3.start()
-
-
-
-
-
-
-
-
 
 
 
@@ -226,9 +223,8 @@ while True:
         code_executed = False
 
 
-    i = encoder_count_deque.pop()
+    # i = encoder_count_deque.pop()
 
-    print(i)
 
 
     cv2.imshow("Frame", image)
