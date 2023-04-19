@@ -1,9 +1,9 @@
-import socket
-import struct
-import time
+# import socket
+# import struct
+# import time
 
-HOST = "192.168.0.2" # The remote host
-PORT = 30002 # The same port as used by the server
+# HOST = "192.168.0.2" # The remote host
+# PORT = 30002 # The same port as used by the server
 
 # print("Starting Program")
 
@@ -119,20 +119,20 @@ PORT = 30002 # The same port as used by the server
 
 
 
-import socket
+# import socket
 
-# establish a TCP/IP connection to the robot controller
-robot_ip = '192.168.0.2'  # replace with the IP address of your robot
-robot_port = 30002
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect((robot_ip, robot_port))
+# # establish a TCP/IP connection to the robot controller
+# robot_ip = '192.168.0.2'  # replace with the IP address of your robot
+# robot_port = 30002
+# sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# sock.connect((robot_ip, robot_port))
 
-# send the secondary program to the robot controller
-secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
-sock.send(secondary_program.encode())
+# # send the secondary program to the robot controller
+# secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
+# sock.send(secondary_program.encode())
 
-# close the TCP/IP connection
-sock.close()
+# # close the TCP/IP connection
+# sock.close()
 
 
 
@@ -308,18 +308,18 @@ sock.close()
 
 # # Python code
 
-# import socket
+import socket
 
-# # set up socket connection
-# HOST = ""  # IP address of UR10 robot
-# PORT = 30002  # port number for socket communication
-# sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# sock.connect((HOST, PORT))
+# set up socket connection
+HOST = "192.168.0.134"  # IP address of UR10 robot
+PORT = 3020  # port number for socket communication
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((HOST, PORT))
 
-# while True :# send a string message
-#     message = "True".encode()
-#     sock.send(message)
 
+message = "backward".encode()
+sock.send(message)
+sock.close()
 
 # host = ""
 # port = 30002  # initiate port no above 1024
@@ -342,3 +342,4 @@ sock.close()
 
 
 
+# /////

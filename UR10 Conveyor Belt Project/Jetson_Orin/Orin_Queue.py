@@ -17,7 +17,7 @@ color_cam.setInterleaved(False)
 color_cam.initialControl.setManualFocus(0)
 
 # Set manual exposure and initial exposure time
-exposure_time_us = 8000
+exposure_time_us = 11200
 iso_value = 400
 color_cam.initialControl.setManualExposure(exposure_time_us, iso_value)
 
@@ -40,8 +40,7 @@ stored_y = None
 
 
 
-
-def get_encoder_count(encoder_count_deque):
+def get_encoder_count(encoder_count_queue):
     # get the hostname
     host = ""
     port = 50001  # initiate port no above 1024
@@ -54,56 +53,47 @@ def get_encoder_count(encoder_count_deque):
     UR10, address = Encoder_socket.accept()  # accept new connection
     #print("Connection from: " + str(address))
     while True: 
-        # if not encoder_count_deque:
+        # if not encoder_count_queue:
         #     time.sleep(0.1)  # wait for 0.1 seconds
         #     continue  # check again
         # receive data stream. it won't accept data packet greater than 1024 bytes
         Encoder_count = UR10.recv(1024).decode()
         #print(Encoder_count)
-        encoder_count_deque.append(Encoder_count)
+        encoder_count_queue.put(Encoder_count)
         print("-",Encoder_count)
 
 # # ###############################################################################
 
-encoder_count_deque = deque()
+encoder_count_queue = queue.Queue()
 
-t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_deque,))
+t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_queue,))
 t1.start()
 
-def send_encoder(encoder_count_deque):
-    host = ""
-    port = 50000  # initiate port no above 1024
 
-    continue_running = True
-    while continue_running:
+
+def send_encoder(encoder_count_queue, send_event):
+    while True:
+        send_event.wait()  # Wait until the event is set by the client
+        host = ""
+        port = 50000  # initiate port no above 1024
+
         UR10_Encoder_socket = socket.socket()  # get instance
-        UR10_Encoder_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # set SO_REUSEADDR option
         UR10_Encoder_socket.bind((host, port))  # bind host address and port together
         UR10_Encoder_socket.listen(1)
         UR10_Encoder, address = UR10_Encoder_socket.accept()  # accept new connection
 
-        if len(encoder_count_deque) > 0: # check if there are new values in the deque
-            encoder_count_str = encoder_count_deque.pop()
-            encoder_count = float(encoder_count_str)
-            Target_Encoder = encoder_count + 17702
-            print("Encoder_count:", encoder_count_str, "Target Count", Target_Encoder, "Difference", Target_Encoder - encoder_count)
+        encoder_count_str = encoder_count_queue.get(block=False)
+        encoder_count = float(encoder_count_str)
+        Target_Encoder = encoder_count + 17702
+        UR10_Encoder.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
+        print("Encoder_count:", encoder_count_str, "Target Count", Target_Encoder, "Difference", Target_Encoder - encoder_count)
 
-            UR10_Encoder.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
-            data = UR10_Encoder.recv(1024).decode()
-            print(str(data))
-
-            # Close the connection after sending the target encoder
-            UR10_Encoder.close()
-            UR10_Encoder_socket.close()
-
-            # Set the flag to False to end the thread
-            continue_running = False
-            
-        break
-
-    # Restart the thread
-    #send_encoder(encoder_count_deque)
-
+        data = UR10_Encoder.recv(1024).decode()
+        print(str(data))
+        # Clean up the socket connection and exit the function
+        UR10_Encoder.close()
+        UR10_Encoder_socket.close()
+        send_event.clear()  # Clear the event for the next iteration
 
 
 def send_y_position(POS_Y_queue):
@@ -118,20 +108,20 @@ def send_y_position(POS_Y_queue):
     while True:
         POS_Y = POS_Y_queue.get()
         UR10_Y_Position.send(("POS_Y " + str(POS_Y) + "\n").encode())
-        print(POS_Y)
         data = UR10_Y_Position.recv(1024).decode()
         print(str(data))
 
 
 POS_Y_queue = queue.Queue()
-
-
-# t2 = threading.Thread(target=send_encoder, args=(encoder_count_deque,))
+# t2 = threading.Thread(target=send_target_location, args=(POS_Y_queue, encoder_count_queue,))
 # t2.start()
+
+send_event = threading.Event()
+t2 = threading.Thread(target=send_encoder, args=(encoder_count_queue, send_event))
+t2.start()
 
 t3 = threading.Thread(target=send_y_position, args=(POS_Y_queue,))
 t3.start()
-
 
 
 
@@ -142,12 +132,9 @@ def Boolean(stored_x):
     sock.connect((robot_ip, robot_port))
     secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
     sock.send(secondary_program.encode())
-    t2 = threading.Thread(target=send_encoder, args=(encoder_count_deque,))
-    t2.start()
-
     # close the TCP/IP connection
+    send_event.set()  # Set the event to start the send_encoder function
     sock.close()
-
 
 
 # Define a threshold for the y-coordinate
@@ -191,7 +178,6 @@ while True:
 
         # Draw contour and polygon on original image
         if area > 30000 and area < 37000:
-            #print("--------------------------------------------------------------------------")
             cv2.circle(image, (int(x), int(y)), 5, (0, 0, 255), -1)
             cv2.polylines(image, [box], True, (255, 0, 0), 2)
             cv2.putText(image, "Width {:.2f} cm".format(object_width, 0), (int(x - 40), int(y - 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
