@@ -61,7 +61,7 @@ def get_encoder_count(encoder_count_deque):
         Encoder_count = UR10.recv(1024).decode()
         #print(Encoder_count)
         encoder_count_deque.append(Encoder_count)
-        print("-",Encoder_count)
+        #print("-",Encoder_count)
 
 # # ###############################################################################
 
@@ -85,7 +85,7 @@ def send_encoder(encoder_count_deque):
         if len(encoder_count_deque) > 0: # check if there are new values in the deque
             encoder_count_str = encoder_count_deque.pop()
             encoder_count = float(encoder_count_str)
-            Target_Encoder = encoder_count + 17702
+            Target_Encoder = encoder_count + 17700
             print("Encoder_count:", encoder_count_str, "Target Count", Target_Encoder, "Difference", Target_Encoder - encoder_count)
 
             UR10_Encoder.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
