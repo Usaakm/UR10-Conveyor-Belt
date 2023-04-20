@@ -113,28 +113,20 @@ def Boolean(stored_x, POS_Y_queue):
     if len(encoder_count_deque) > 0:  # check if there are new values in the deque
         encoder_count_str = encoder_count_deque.pop()
         encoder_count = float(encoder_count_str)
-        target_encoder = encoder_count + 16600
-   
-
-    start_time = time.time()  # Record the start time
+        target_encoder = encoder_count + 16680
     robot_ip = '192.168.0.2'  # replace with the IP address of your robot
     robot_port = 30002
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((robot_ip, robot_port))
-    
 
     secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
     sock.send(secondary_program.encode())
 
-    end_time = time.time()  # Record the end time
-    execution_time = (end_time - start_time) * 1000  # Calculate the execution time in milliseconds
-    print("Execution time: {:.8f} ms".format(execution_time))
-
     t2 = threading.Thread(target=send_encoder, args=(encoder_count_deque, POS_Y_queue, target_encoder))
     t2.start()
-
     # close the TCP/IP connection
     sock.close()
+
 
 
 
@@ -183,7 +175,7 @@ while True:
         thickness = 2
         cv2.line(image, start_point, end_point, color, thickness)
         # Draw contour and polygon on original image
-        if area > 30000 and area < 47000:
+        if area > 30000 and area < 37000:
             #print("--------------------------------------------------------------------------")
             cv2.circle(image, (int(x), int(y)), 5, (0, 0, 255), -1)
             cv2.polylines(image, [box], True, (255, 0, 0), 2)
@@ -199,7 +191,7 @@ while True:
             current_y = y
             object_detected = True
             d = y
-            print(current_y)
+            
     object_left_view = stored_y is not None and stored_y < y_threshold
 
     # Update the stored x-coordinate if the tracked object has left the camera's field of view
@@ -230,7 +222,7 @@ while True:
 
     if stored_x is not None and not code_executed:
         if current_y is not None and current_y <= 900:  
-            #print("y ==== ", current_y)  
+            print("y ==== ", current_y)  
             t4 = threading.Thread(target=Boolean, args=(stored_x,POS_Y_queue))
             t4.start()
             POS_Y_queue.put(POS_Y)
@@ -238,7 +230,7 @@ while True:
     elif not object_detected:
         code_executed = False
 
-    
+
     cv2.imshow("Frame", image)
     #cv2.imshow("Canny", threshold)
     

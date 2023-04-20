@@ -68,7 +68,7 @@ encoder_count_deque = deque()
 t1 = threading.Thread(target=get_encoder_count, args=(encoder_count_deque,))
 t1.start()
 
-def send_encoder(encoder_count_deque, POS_Y_queue):
+def send_encoder(encoder_count_deque, POS_Y_queue, target_encoder):
     host = ""
     port = 50000  # initiate port no above 1024
 
@@ -80,29 +80,21 @@ def send_encoder(encoder_count_deque, POS_Y_queue):
         UR10_Encoder_socket.listen(1)
         UR10_Encoder, address = UR10_Encoder_socket.accept()  # accept new connection
 
-        if len(encoder_count_deque) > 0: # check if there are new values in the deque
-            encoder_count_str = encoder_count_deque.pop()
-            encoder_count = float(encoder_count_str)
-            #Target_Encoder = encoder_count + 17700
-            Target_Encoder = encoder_count + 16646
-            #Target_Encoder = encoder_count + 16146
+        POS_Y = POS_Y_queue.get()
+        PosLoc = [POS_Y, target_encoder]
 
-            print("Encoder_count:", encoder_count_str, "Target Count", Target_Encoder, "Difference", Target_Encoder - encoder_count)
-            POS_Y = POS_Y_queue.get()
-            PosLoc = [POS_Y,Target_Encoder]
-            encoded_data = '({})'.format(','.join(str(val) for val in PosLoc)).encode()            
-            UR10_Encoder.send(encoded_data)
-            data = UR10_Encoder.recv(1024).decode()
-            print(str(data))
+        encoded_data = '({:.15f},{:.15f})'.format(PosLoc[0], PosLoc[1]).encode()
 
+        UR10_Encoder.send(encoded_data)
+        data = UR10_Encoder.recv(1024).decode()
+        print(str(data))
 
-            # Close the connection after sending the target encoder
-            UR10_Encoder.close()
-            UR10_Encoder_socket.close()
+        # Close the connection after sending the target encoder
+        UR10_Encoder.close()
+        UR10_Encoder_socket.close()
 
-            # Set the flag to False to end the thread
-            continue_running = False
-            
+        # Set the flag to False to end the thread
+        continue_running = False
         break
 
 
@@ -110,21 +102,50 @@ def send_encoder(encoder_count_deque, POS_Y_queue):
 POS_Y_queue = queue.Queue()
 
 
+def speed():
+    # get the hostname
+    host = ""
+    port = 50002  # initiate port no above 1024
+
+    Speed_socket = socket.socket()  # get instance
+    # look closely. The bind() function takes tuple as argument
+    Speed_socket.bind((host, port))  # bind host address and port together
+    # configure how many client the server can listen simultaneously
+    Speed_socket.listen(1)
+    UR10, address = Speed_socket.accept()  # accept new connection
+    #print("Connection from: " + str(address))
+    while True: 
+        # receive data stream. it won't accept data packet greater than 1024 bytes
+        Conveyor_Speed = UR10.recv(1024).decode()
+        print(Conveyor_Speed)
+        encoder_count_deque.append(Conveyor_Speed)
 
 
+
+t3 = threading.Thread(target=speed, )
+t3.start()
 
 def Boolean(stored_x, POS_Y_queue):
-    robot_ip = '192.168.0.2'  # replace with the IP address of your robot
-    robot_port = 30002
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((robot_ip, robot_port))
-    secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
-    sock.send(secondary_program.encode())
-    t2 = threading.Thread(target=send_encoder, args=(encoder_count_deque, POS_Y_queue,))    
-    t2.start()
+    
+    if len(encoder_count_deque) > 0:  # check if there are new values in the deque
+        encoder_count_str = encoder_count_deque.pop()
+        encoder_count = float(encoder_count_str)
+        target_encoder = encoder_count + 16000
+        robot_ip = '192.168.0.2'  # replace with the IP address of your robot
+        robot_port = 30002
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((robot_ip, robot_port))
+    
+        secondary_program = 'sec secondaryProgram():\n  set_digital_out(3, True)\nend\n'
+        sock.send(secondary_program.encode())
 
-    # close the TCP/IP connection
-    sock.close()
+        t2 = threading.Thread(target=send_encoder, args=(encoder_count_deque, POS_Y_queue, target_encoder))
+        t2.start()
+
+        # close the TCP/IP connection
+        sock.close()
+
+
 
 
 
@@ -227,7 +248,7 @@ while True:
             speed = distance / time_diff
             #if current_y > 900 :
             # Print the speed
-            print(f"Speed: {speed:.2f} cm/s")
+            #print(f"Speed: {speed:.2f} cm/s")
 
         # Update the previous position and time
         prev_x = current_x

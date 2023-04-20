@@ -390,7 +390,7 @@ def send_encoder(encoder_count_deque, POS_Y_queue):
             encoder_count_str = encoder_count_deque.pop()
             encoder_count = float(encoder_count_str)
             #Target_Encoder = encoder_count + 17700
-            Target_Encoder = encoder_count + 16000
+            Target_Encoder = encoder_count + 16680
             #Target_Encoder = encoder_count + 16146
 
             print("Encoder_count: {:.15f} Target Count {:.15f} Difference {:.15f}".format(encoder_count, Target_Encoder, Target_Encoder - encoder_count))
