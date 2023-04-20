@@ -160,27 +160,38 @@
 
 
 
+import socket
 
-# import socket
+# Set the IP address to listen on to all available interfaces
+robot_ip = ''
+robot_port = 50002
 
-# # create a TCP/IP socket
-# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# Create a TCP socket and bind it to the IP address and port
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind((robot_ip, robot_port))
 
-# # define the IP address and port number of the robot
-# robot_ip = '192.168.0.2'
-# robot_port = 5000
+# Listen for incoming connections
+server_socket.listen()
 
-# # connect to the robot
-# s.connect((robot_ip, robot_port))
+print(f"Server socket listening on port {robot_port}...")
 
-# # receive data from the robot
-# data = s.recv(1024).decode('utf-8')
+while True:
+    # Wait for a client to connect
+    client_socket, client_address = server_socket.accept()
+    print(f"Received connection from {client_address}")
+    
+    while True:
+        # Receive data from the client
+        data = client_socket.recv(1024)
+        if not data:
+            # No more data, so break out of the loop
+            break
+    
+        print(f"Received data: {data.decode()}")  # assuming data is a string
+        
+    
 
-# # print the received data
-# print(data)
-
-# # close the connection
-# s.close()
+    
 
 
 
@@ -308,18 +319,18 @@
 
 # # Python code
 
-import socket
+# import socket
 
-# set up socket connection
-HOST = "192.168.0.134"  # IP address of UR10 robot
-PORT = 3020  # port number for socket communication
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect((HOST, PORT))
+# # set up socket connection
+# HOST = "192.168.0.134"  # IP address of UR10 robot
+# PORT = 3020  # port number for socket communication
+# sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# sock.connect((HOST, PORT))
 
 
-message = "backward".encode()
-sock.send(message)
-sock.close()
+# message = "backward".encode()
+# sock.send(message)
+# sock.close()
 
 # host = ""
 # port = 30002  # initiate port no above 1024
