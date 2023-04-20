@@ -133,7 +133,7 @@ while True:
       
 
         # Draw contour and polygon on original image
-        if area > 35100 :
+        if area > 30000 and area < 47000:
 
             cv2.circle(image, (int(x), int(y)), 5, (0, 0, 255), -1)
             #cv2.rectangle((image, 20,20, (200,200), 5, (0, 0, 255), -1))

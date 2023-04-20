@@ -379,6 +379,8 @@ def send_encoder(encoder_count_deque, POS_Y_queue):
     port = 50000  # initiate port no above 1024
 
     continue_running = True
+    start_time = time.time()
+
     while continue_running:
         UR10_Encoder_socket = socket.socket()  # get instance
         UR10_Encoder_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # set SO_REUSEADDR option
@@ -395,7 +397,7 @@ def send_encoder(encoder_count_deque, POS_Y_queue):
 
             print("Encoder_count: {:.15f} Target Count {:.15f} Difference {:.15f}".format(encoder_count, Target_Encoder, Target_Encoder - encoder_count))
 
-#            print("Encoder_count:", encoder_count_str, "Target Count", Target_Encoder, "Difference", Target_Encoder - encoder_count)
+#           print("Encoder_count:", encoder_count_str, "Target Count", Target_Encoder, "Difference", Target_Encoder - encoder_count)
             POS_Y = POS_Y_queue.get()
             PosLoc = [POS_Y,Target_Encoder]
             #encoded_data = '({})'.format(','.join(str(val) for val in PosLoc)).encode()
@@ -412,6 +414,8 @@ def send_encoder(encoder_count_deque, POS_Y_queue):
 
             # Set the flag to False to end the thread
             continue_running = False
+            elapsed_time = time.time() - start_time
+            print("Elapsed time: {:.2f} seconds".format(elapsed_time))
             
         break
 

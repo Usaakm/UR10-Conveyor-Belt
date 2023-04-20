@@ -113,7 +113,7 @@ def Boolean(stored_x, POS_Y_queue):
     if len(encoder_count_deque) > 0:  # check if there are new values in the deque
         encoder_count_str = encoder_count_deque.pop()
         encoder_count = float(encoder_count_str)
-        target_encoder = encoder_count + 16680
+        target_encoder = encoder_count + 16595
     robot_ip = '192.168.0.2'  # replace with the IP address of your robot
     robot_port = 30002
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
