@@ -389,14 +389,19 @@ def send_encoder(encoder_count_deque, POS_Y_queue):
         if len(encoder_count_deque) > 0: # check if there are new values in the deque
             encoder_count_str = encoder_count_deque.pop()
             encoder_count = float(encoder_count_str)
-            Target_Encoder = encoder_count + 17700
-            print("Encoder_count:", encoder_count_str, "Target Count", Target_Encoder, "Difference", Target_Encoder - encoder_count)
+            #Target_Encoder = encoder_count + 17700
+            Target_Encoder = encoder_count + 16000
+            #Target_Encoder = encoder_count + 16146
+
+            print("Encoder_count: {:.15f} Target Count {:.15f} Difference {:.15f}".format(encoder_count, Target_Encoder, Target_Encoder - encoder_count))
+
+#            print("Encoder_count:", encoder_count_str, "Target Count", Target_Encoder, "Difference", Target_Encoder - encoder_count)
             POS_Y = POS_Y_queue.get()
             PosLoc = [POS_Y,Target_Encoder]
-            encoded_data = '({})'.format(','.join(str(val) for val in PosLoc)).encode()            
+            #encoded_data = '({})'.format(','.join(str(val) for val in PosLoc)).encode()
+            encoded_data = '({:.15f},{:.15f})'.format(PosLoc[0], PosLoc[1]).encode()
+            
             UR10_Encoder.send(encoded_data)
-
-            #UR10_Encoder.send(("Target_Encoder" + str(Target_Encoder) + "\n").encode())
             data = UR10_Encoder.recv(1024).decode()
             print(str(data))
 
@@ -471,9 +476,13 @@ while True:
         # Get Width and Height of the Objects by applying the Ratio pixel to cm
         object_width = w / pixel_cm_ratio
         object_height = h / pixel_cm_ratio
-
+        start_point = (0, 900)
+        end_point = (1920, 900)
+        color = (0, 0, 255)
+        thickness = 2
+        cv2.line(image, start_point, end_point, color, thickness)
         # Draw contour and polygon on original image
-        if area > 30000 and area < 37000:
+        if area > 30000 and area < 47000:
             #print("--------------------------------------------------------------------------")
             cv2.circle(image, (int(x), int(y)), 5, (0, 0, 255), -1)
             cv2.polylines(image, [box], True, (255, 0, 0), 2)
@@ -481,6 +490,9 @@ while True:
             cv2.putText(image, "Height {:.2f} cm".format(object_height, 0), (int(x - 40), int(y + 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
             cv2.putText(image, "X {:.2f} CM".format(x/pixel_cm_ratio), (int(x - 40), int(y -35)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
             cv2.putText(image, "Y {:.2f} CM".format(y/pixel_cm_ratio), (int(x - 40), int(y + 35)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+
+
+
 
             current_x = x
             current_y = y
@@ -516,10 +528,12 @@ while True:
 
 
     if stored_x is not None and not code_executed:
-        t4 = threading.Thread(target=Boolean, args=(stored_x,POS_Y_queue))
-        t4.start()
-        POS_Y_queue.put(POS_Y)
-        code_executed = True
+        if current_y is not None and current_y <= 900:  
+            print("y ==== ", current_y)  
+            t4 = threading.Thread(target=Boolean, args=(stored_x,POS_Y_queue))
+            t4.start()
+            POS_Y_queue.put(POS_Y)
+            code_executed = True
     elif not object_detected:
         code_executed = False
 
