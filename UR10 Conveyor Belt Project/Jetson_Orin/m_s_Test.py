@@ -101,7 +101,7 @@ def send_encoder(encoder_count_deque, POS_Y_queue, target_encoder):
 
 POS_Y_queue = queue.Queue()
 
-
+conveyor_speed_deque = deque()
 def speed():
     # get the hostname
     host = ""
@@ -118,7 +118,8 @@ def speed():
         # receive data stream. it won't accept data packet greater than 1024 bytes
         Conveyor_Speed = UR10.recv(1024).decode()
         print(Conveyor_Speed)
-        encoder_count_deque.append(Conveyor_Speed)
+        conveyor_speed_deque.append(Conveyor_Speed)
+        
 
 
 
@@ -130,7 +131,7 @@ def Boolean(stored_x, POS_Y_queue):
     if len(encoder_count_deque) > 0:  # check if there are new values in the deque
         encoder_count_str = encoder_count_deque.pop()
         encoder_count = float(encoder_count_str)
-        target_encoder = encoder_count + 16000
+        target_encoder = encoder_count + 19600
         robot_ip = '192.168.0.2'  # replace with the IP address of your robot
         robot_port = 30002
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
