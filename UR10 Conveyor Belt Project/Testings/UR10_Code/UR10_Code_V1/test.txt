@@ -1,0 +1,39 @@
+ Program
+   Robot Program
+     accel≔0.1
+     vel≔0.1
+     Call Initialize
+     Call Orin_Variables
+     If Y < -0.15
+       Call Orin_Variables
+     Else
+       Call Picking
+     'Halt'
+     Call Place
+   Initialize
+     MoveJ
+       Waypoint_3
+   Orin_Variables
+     socket_open("192.168.0.3", 50000, "Orin_Target")
+     encoder_target≔0
+     Y≔socket_get_var("POS_Y", "Orin_Target")
+     Y≔Y / 1000
+   Picking
+     movej(p[-0.6, Y,  0.02, -3.02037, 0.59482, -0.03077], a  = accel, v = vel)
+     Adsorb : SMC Vacuum gripper unit
+     'Halt'
+     Tracking Conveyor 1
+       current_pose≔get_actual_tcp_pose()
+       current_pose≔p[current_pose[0], current_pose[1], current_pose[2] - 0.015, current_pose[3], current_pose[4], current_pose[5]]
+   Place
+     MoveJ
+       Waypoint_1
+       Waypoint_2
+       Release : SMC Vacuum gripper unit
+       Waypoint_4
+   Thread_1
+     socket_open("192.168.0.121", 50001, "Orin_Encoder")
+     Loop
+       Encoder_Count≔encoder_get_tick_count(0)
+       socket_send_line(Encoder_Count, "Orin_Encoder")
+       Wait: 0.05

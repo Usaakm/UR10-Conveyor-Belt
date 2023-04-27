@@ -1,0 +1,43 @@
+<mxfile host="app.diagrams.net" modified="2023-03-24T15:54:14.649Z" agent="Mozilla/5.0 (X11; Ubuntu; Linux aarch64; rv:109.0) Gecko/20100101 Firefox/111.0" etag="NTz7OCJ4dM6XCfQFAwd5" version="21.1.1" type="device">
+  <diagram name="Page-1" id="LyqZY6KkNUmO3at2b9Nw">
+    <mxGraphModel dx="716" dy="625" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-1" value="camera detects the object" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="10" y="207" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-2" value="sends the location of where it will be, and the ticks count to the location" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="10" y="257" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-3" value="robot will move to the location and wait for the object to come " style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="10" y="327" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-4" value="" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="10" y="800" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-5" value="" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="10" y="740" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-6" value="if no answer from the pc then move to neutral pick position " style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="130" y="537" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-7" value="Robot sends the encoder tickcount to pc" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="390" y="380" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-8" value="computer sends the location of the next object " style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="10" y="537" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-9" value="it will pick the object" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="10" y="397" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-10" value="&lt;div style=&quot;font-size: 7px;&quot;&gt;if not picked up send signal, not picked &lt;br style=&quot;font-size: 7px;&quot;&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="140" y="467" width="90" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="tiBrjMvVy3Kj4YKHYdIc-11" value="if picked up then go and drop and send signal dropped&amp;nbsp; " style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;" vertex="1" parent="1">
+          <mxGeometry x="10" y="467" width="90" height="36" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

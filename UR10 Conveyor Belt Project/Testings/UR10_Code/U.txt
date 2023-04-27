@@ -1,0 +1,19 @@
+ Program
+   Init Variables
+   Robot Program
+     'Encoder_Target≔0'
+     'Loop digital_in[3] ==  True '
+     If digital_out[3] ==  True 
+       Call Orin_Variables
+   Orin_Variables
+     socket_open("192.168.0.3", 50000, "Orin_Target")
+     Encoder_Target≔socket_get_var("Target_Encoder", "Orin_Target")
+     Wait: 1.0
+     'Y≔ -0.15'
+   Thread_1
+     socket_open("192.168.0.3", 50001, "Orin_Encoder")
+     Loop
+       Encoder_Count≔encoder_get_tick_count(0)
+       socket_send_line(Encoder_Count, "Orin_Encoder")
+       Wait: 1.0
+   'Thread_2'

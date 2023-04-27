@@ -1,0 +1,65 @@
+ Program
+   Init Variables
+   Robot Program
+     accel≔1
+     Y≔0
+     'Encoder_Target≔0'
+     vel≔1
+     set_tool_voltage(24)
+     Call Initialize
+     'Loop digital_in[3] ==  True '
+     If digital_out[3] ==  True 
+       Call Orin_Variables
+       Call Picking
+       Call Place
+   Initialize
+     MoveJ
+       Waypoint_3
+       Release : SMC Vacuum gripper unit
+   Orin_Variables
+     socket_open("192.168.0.3", 50000, "Orin_Encoder_Target")
+     data≔socket_read_ascii_float(2, "Orin_Encoder_Target")
+     Y≔data[1]
+     Encoder_Target≔data[2]
+     'Halt'
+     'socket_open("192.168.0.3", 50002, "Orin_Y_Target")'
+     'Y≔socket_get_var("POS_Y", "Orin_Y_Target")'
+     Y≔Y / 1000
+     socket_close("Orin_Encoder_Target")
+   Picking
+     'If Y > -0.2'
+     movej(p[-0.6, Y,  0.01, -3.02037, 0.59482, -0.03077], a  = accel, v = vel)
+     Wait Encoder_Count ≥Encoder_Target
+     Tracking Conveyor 1
+       current_pose= get_target_tcp_pose()
+       new_pose≔p[current_pose[0], current_pose[1], current_pose[2] - 0.017, current_pose[3], current_pose[4], current_pose[5]]
+       movej(new_pose, a= accel, v = vel)
+       Adsorb : SMC Vacuum gripper unit
+     'If initial_count == Encoder_Target'
+     'Loop Encoder_Count == Encoder_Target '
+   Place
+     MoveJ
+       Waypoint_1
+       Waypoint_2
+       'Release : SMC Vacuum gripper unit'
+       Waypoint_4
+       set_digital_out(3,  False )
+   Thread_1
+     socket_open("192.168.0.3", 50001, "Orin_Encoder")
+     Loop
+       Encoder_Count≔encoder_get_tick_count(0)
+       socket_send_line(Encoder_Count, "Orin_Encoder")
+       Wait: 0.05
+   Thread_2
+     radius≔0.048
+     enc_resolution≔13333
+     dis_per_cnt≔100.0 / enc_resolution
+     socket_open("192.168.0.3", 50002, "Orin_Speed")
+     Loop
+       initial_count≔encoder_get_tick_count(0)
+       Wait: 0.5
+       final_count≔encoder_get_tick_count(0)
+       change_count≔final_count - initial_count
+       'linear_speed2≔(change_count * radius) / 0.5'
+       CM_S≔(change_count * dis_per_cnt ) /0.5
+       socket_send_line(CM_S, "Orin_Speed")

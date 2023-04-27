@@ -78,7 +78,7 @@ def send_encoder(encoder_count_deque, POS_Y_queue, target_encoder):
     continue_running = True
     while continue_running:
         UR10_Encoder_socket = socket.socket()  # get instance
-        #UR10_Encoder_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # set SO_REUSEADDR option
+        UR10_Encoder_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # set SO_REUSEADDR option
         UR10_Encoder_socket.bind((host, port))  # bind host address and port together
         UR10_Encoder_socket.listen(1)
         UR10_Encoder, address = UR10_Encoder_socket.accept()  # accept new connection
@@ -101,23 +101,15 @@ def send_encoder(encoder_count_deque, POS_Y_queue, target_encoder):
         break
 
 
-
 POS_Y_queue = queue.Queue()
 
 
-
-
-
-    
 def Boolean(stored_x, POS_Y_queue):
-    encoder_count_deque_length = len(encoder_count_deque)
-    if encoder_count_deque_length > 0:  # check if there are new values in the deque
+    
+    if len(encoder_count_deque) > 0:  # check if there are new values in the deque
         encoder_count_str = encoder_count_deque.pop()
-        if encoder_count_str:
-            encoder_count = float(encoder_count_str)
-            #target_encoder = encoder_count + 16595
-            target_encoder = encoder_count + 20400
-
+        encoder_count = float(encoder_count_str)
+        target_encoder = encoder_count + 16595
     robot_ip = '192.168.0.2'  # replace with the IP address of your robot
     robot_port = 30002
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

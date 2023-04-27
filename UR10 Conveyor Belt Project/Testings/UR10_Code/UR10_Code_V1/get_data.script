@@ -1,0 +1,82 @@
+def get_data():
+  set_gravity([0.0, 0.0, 9.82])
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  set_runstate_standard_digital_output_to_value(7, 2)
+  set_safety_mode_transition_hardness(1)
+  set_tool_voltage(12)
+  step_count_ffd68820_aa0c_492b_a005_35afef5e1d02 = 0.0
+  thread Step_Counter_Thread_109dd721_805c_48ad_aee1_0eba8affdad4():
+    while (True):
+      step_count_ffd68820_aa0c_492b_a005_35afef5e1d02 = step_count_ffd68820_aa0c_492b_a005_35afef5e1d02 + 1.0
+      sync()
+    end
+  end
+  run Step_Counter_Thread_109dd721_805c_48ad_aee1_0eba8affdad4()
+  set_tcp(p[0.0,0.0,0.177,0.0,0.0,0.0])
+  set_payload(0.62, [0.0, 0.0, 0.09])
+  global i_z_start=100
+  global Conveyor=p[-0.6004473279455352,-0.263741565334468,0.015939600744130977,0.09575441144599209,-0.08867357457834127,-1.568576085925291]
+  global table=p[0.260641832324878,0.5800637745710332,0.028009748668278572,0.558374120907397,3.0911728006228736,-5.53707866320477E-4]
+  encoder_enable_pulse_decode(0, 1, 0, 1)
+  def start_conveyor_tracking0():
+    track_conveyor_linear(pose_sub(p[-0.8539403151199703,-0.46210801269858565,-0.1603226202019039,-3.134793549007148,-0.20162972403430834,-3.590269980813882E-4], p[0.8268537208189045,-0.45437899628813316,-0.1663478175542951,-3.134731863517781,-0.20159235158378952,-2.68345437497033E-4]), 13333, 0)
+  end
+  rtde_set_watchdog("speed_slider_mask", 10.0, "ignore")
+  # begin: URCap Installation Node
+  #   Source: SMC Vacuum Gripper Unit, 1.0.0, SMC Corporation.
+  #   Type: SMC Vacuum Gripper Unit
+  thValRawVoltage = 0
+  vacuumUnitIsMonitoring = False
+  vacuumUnitAdsorbLevel = 0
+  thread threadVacuumMonitor():
+    while (True):
+      if (vacuumUnitIsMonitoring == True):
+        if (vacuumUnitAdsorbLevel != 0):
+          thValCheckTime = 100
+          thValWaitTime = 0
+          thValCurrentLevel = 0
+          while (vacuumUnitAdsorbLevel < thValCurrentLevel):
+            thValRawVoltage = get_tool_analog_in(0)
+            thValCurAna = thValRawVoltage - 1
+            thValVoltage = thValCurAna / 0.9145
+            if (thValVoltage < 0):
+              thValCurrentLevel = 0
+            elif (thValVoltage > 4):
+              thValCurrentLevel = -101
+            else:
+              thValCurrentLevel = -(thValVoltage * 25.25)
+            end
+            thValWaitTime = thValWaitTime+1
+            if (thValWaitTime > thValCheckTime):
+              set_standard_digital_out(5, False)
+              set_standard_digital_out(7, True)
+              popup("Air leakage detected on workpiece.", error = True, blocking = False)
+              halt
+            end
+            sync()
+          end
+        end
+      end
+      sync()
+    end
+  end
+  threadVacuumMonitorHandle = run threadVacuumMonitor()
+  # end: URCap Installation Node
+  while (True):
+    $ 1 "Robot Program"
+    $ 2 "data≔[0.0, 0.0, 0.0]"
+    global data=[0.0, 0.0, 0.0]
+    $ 3 "camera = rpc_factory('xmlrpc','http://127.0.0.1:5000')"
+    camera = rpc_factory("xmlrpc","http://127.0.0.1:5000")
+    $ 4 "data = camera.get_next_pick()"
+    data = camera.get_next_pick()
+    $ 5 "Popup"
+    popup(str_cat("",data), "Message", False, False, blocking=True)
+  end
+end
